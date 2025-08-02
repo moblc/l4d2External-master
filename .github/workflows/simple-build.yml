@@ -1,0 +1,118 @@
+name: Simple Build and Release
+
+# 权限设置
+permissions:
+  contents: write
+  actions: read
+  id-token: write
+
+on:
+  push:
+    branches:
+      - master  # 推送时构建并创建Release
+  workflow_dispatch: # 手动触发
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    # 1. 检出代码
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    # 2. 设置 .NET 环境
+    - name: 🔧 Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    # 3. 还原依赖
+    - name: 📦 Restore dependencies
+      run: dotnet restore l4d2External/l4d2External.csproj
+      
+    # 4. 清理之前的构建
+    - name: 🧹 Clean previous builds
+      run: dotnet clean l4d2External/l4d2External.csproj --configuration Release --verbosity quiet
+      
+    # 5. 构建发布版本
+    - name: 🏗️ Build and publish
+      run: |
+        dotnet publish l4d2External/l4d2External.csproj `
+          --configuration Release `
+          --runtime win-x86 `
+          --self-contained true `
+          --output "./publish" `
+          --verbosity minimal
+          
+    # 6. 验证构建结果
+    - name: ✅ Check build result
+      run: |
+        if (Test-Path "./publish/l4d2External.exe") {
+          $file = Get-Item "./publish/l4d2External.exe"
+          $sizeMB = [math]::Round($file.Length / 1MB, 2)
+          Write-Host "✅ Build successful!" -ForegroundColor Green
+          Write-Host "📦 File: l4d2External.exe" -ForegroundColor Cyan
+          Write-Host "📏 Size: $($file.Length) bytes ($sizeMB MB)" -ForegroundColor Cyan
+        } else {
+          Write-Host "❌ Build failed! Executable not found." -ForegroundColor Red
+          exit 1
+        }
+        
+    # 7. 上传构建产物
+    - name: 📤 Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: l4d2External-${{ github.run_number }}
+        path: ./publish/l4d2External.exe
+        retention-days: 30
+        
+    # 8. 创建Release
+    - name: 🎉 Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: "v1.0.${{ github.run_number }}"
+        name: "🎮 求生之路2辅助 v1.0.${{ github.run_number }}"
+        body: |
+          ## 🎮 求生之路2外部辅助
+          
+          **版本:** v1.0.${{ github.run_number }}
+          **构建:** #${{ github.run_number }}  
+          **提交:** ${{ github.sha }}
+          
+          ### 🚀 功能特性
+          - 🎯 **自瞄系统** - 智能自动瞄准功能
+          - 👁️ **透视功能** - 穿墙显示敌人位置  
+          - 🐰 **连跳功能** - 自动连续跳跃
+          - 📦 **单文件** - 无需额外依赖
+          - ⚡ **优化性能** - 体积小，性能强
+          
+          ### 📥 下载使用
+          1. 下载下方的 `l4d2External.exe` 文件
+          2. 运行求生之路2游戏
+          3. **以管理员身份**运行该程序
+          4. 开始游戏！
+          
+          ### ⚠️ 重要提醒
+          - 需要管理员权限运行
+          - 使用风险自负
+          - 仅供学习研究使用
+          
+          ---
+          🤖 *通过GitHub Actions自动构建*
+        files: ./publish/l4d2External.exe
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    # 9. 完成通知
+    - name: 🎊 Build Complete
+      run: |
+        Write-Host ""
+        Write-Host "🎉 Build completed successfully!" -ForegroundColor Green
+        Write-Host "📦 Release v1.0.${{ github.run_number }} has been created!" -ForegroundColor Green
+        Write-Host "� Check: ${{ github.server_url }}/${{ github.repository }}/releases" -ForegroundColor Cyan
+        Write-Host "📁 Backup copy also available in Actions Artifacts" -ForegroundColor Cyan
+        Write-Host ""

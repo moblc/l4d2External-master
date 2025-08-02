@@ -1,0 +1,69 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x86</PlatformTarget>
+    
+    <!-- 启用不安全代码块和UTF8编码 -->
+    <UseUTF8Encoding>true</UseUTF8Encoding>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    
+    <!-- ========== 单文件发布配置 ========== -->
+    <!-- 启用单文件发布 -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <!-- 自包含运行时 -->
+    <SelfContained>true</SelfContained>
+    <!-- 目标运行时 -->
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    <!-- 启用代码裁剪以减小文件大小 -->
+    <PublishTrimmed>true</PublishTrimmed>
+    <!-- 部分裁剪模式，保留关键功能 -->
+    <TrimMode>partial</TrimMode>
+    <!-- 包含本机库到单文件中 -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    
+    <!-- ========== 优化设置 ========== -->
+    <!-- 禁用ReadyToRun以减小文件大小 -->
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <!-- 启用单文件压缩 -->
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <!-- 抑制裁剪分析警告 -->
+    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+    
+    <!-- ========== 版本信息 ========== -->
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <ProductVersion>1.0.0</ProductVersion>
+    <AssemblyTitle>Left 4 Dead 2 Cheat</AssemblyTitle>
+    <AssemblyDescription>External cheat for Left 4 Dead 2</AssemblyDescription>
+  </PropertyGroup>
+
+  <!-- ========== NuGet包引用 ========== -->
+  <ItemGroup>
+    <PackageReference Include="ClickableTransparentOverlay" Version="9.1.0" />
+    <PackageReference Include="ImGui.NET" Version="1.90.1.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.8" />
+    <PackageReference Include="swed32" Version="1.1.0" />
+    <PackageReference Include="Veldrid.ImGui" Version="5.72.0" />
+    <PackageReference Include="Vortice.Mathematics" Version="1.9.3" />
+  </ItemGroup>
+
+  <!-- ========== 防止重要库被过度裁剪 ========== -->
+  <ItemGroup>
+    <TrimmerRootAssembly Include="ClickableTransparentOverlay" />
+    <TrimmerRootAssembly Include="ImGui.NET" />
+    <TrimmerRootAssembly Include="Veldrid.ImGui" />
+    <TrimmerRootAssembly Include="swed32" />
+    <TrimmerRootAssembly Include="SixLabors.ImageSharp" />
+    <TrimmerRootAssembly Include="Vortice.Mathematics" />
+  </ItemGroup>
+
+  <!-- ========== 保留关键反射API ========== -->
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="ILLink.Descriptors.xml" Condition="Exists('ILLink.Descriptors.xml')" />
+  </ItemGroup>
+
+</Project>
